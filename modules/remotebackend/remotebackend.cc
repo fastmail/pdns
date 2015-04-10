@@ -935,6 +935,142 @@ bool RemoteBackend::calculateSOASerial(const string& domain, const SOAData& sd, 
    return true;
 }
 
+bool RemoteBackend::updateDNSSECOrderAndAuth(uint32_t domain_id, const std::string& zonename, const std::string& qname, bool auth)
+{
+   // no point doing dnssec if it's not supported
+   if (d_dnssec == false) return false;
+
+    string ins=toLower(labelReverse(makeRelative(qname, zonename)));
+    return updateDNSSECOrderAndAuthAbsolute(domain_id, qname, ins, auth);
+}
+
+bool RemoteBackend::updateDNSSECOrderAndAuthAbsolute(uint32_t domain_id, const std::string& qname, const std::string& ordername, bool auth)
+{
+   rapidjson::Document query,answer;
+   rapidjson::Value parameters;
+
+   // no point doing dnssec if it's not supported
+   if (d_dnssec == false) return false;
+
+   query.SetObject();
+   JSON_ADD_MEMBER(query, "method", "updateDNSSECOrderAndAuthAbsolute", query.GetAllocator());
+
+   parameters.SetObject();
+   JSON_ADD_MEMBER(parameters, "domain_id", domain_id, query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "qname", qname.c_str(), query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "ordername", ordername.c_str(), query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "auth", auth, query.GetAllocator());
+   query.AddMember("parameters", parameters, query.GetAllocator());
+
+   if (this->send(query) == false || this->recv(answer) == false)
+     return false;
+
+   return true;
+}
+
+bool RemoteBackend::nullifyDNSSECOrderNameAndUpdateAuth(uint32_t domain_id, const std::string& qname, bool auth)
+{
+   rapidjson::Document query,answer;
+   rapidjson::Value parameters;
+
+   // no point doing dnssec if it's not supported
+   if (d_dnssec == false) return false;
+
+   query.SetObject();
+   JSON_ADD_MEMBER(query, "method", "nullifyDNSSECOrderNameAndUpdateAuth", query.GetAllocator());
+
+   parameters.SetObject();
+   JSON_ADD_MEMBER(parameters, "domain_id", domain_id, query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "qname", qname.c_str(), query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "auth", auth, query.GetAllocator());
+   query.AddMember("parameters", parameters, query.GetAllocator());
+
+   if (this->send(query) == false || this->recv(answer) == false)
+     return false;
+
+   return true;
+}
+
+bool RemoteBackend::nullifyDNSSECOrderNameAndAuth(uint32_t domain_id, const std::string& qname, const std::string& type)
+{
+   rapidjson::Document query,answer;
+   rapidjson::Value parameters;
+
+   // no point doing dnssec if it's not supported
+   if (d_dnssec == false) return false;
+
+   query.SetObject();
+   JSON_ADD_MEMBER(query, "method", "nullifyDNSSECOrderNameAndAuth", query.GetAllocator());
+
+   parameters.SetObject();
+   JSON_ADD_MEMBER(parameters, "domain_id", domain_id, query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "qname", qname.c_str(), query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "type", type.c_str(), query.GetAllocator());
+   query.AddMember("parameters", parameters, query.GetAllocator());
+
+   if (this->send(query) == false || this->recv(answer) == false)
+     return false;
+
+   return true;
+}
+
+bool RemoteBackend::setDNSSECAuthOnDsRecord(uint32_t domain_id, const std::string& qname)
+{
+   rapidjson::Document query,answer;
+   rapidjson::Value parameters;
+
+   // no point doing dnssec if it's not supported
+   if (d_dnssec == false) return false;
+
+   query.SetObject();
+   JSON_ADD_MEMBER(query, "method", "setDNSSECAuthOnDsRecord", query.GetAllocator());
+
+   parameters.SetObject();
+   JSON_ADD_MEMBER(parameters, "domain_id", domain_id, query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "qname", qname.c_str(), query.GetAllocator());
+   query.AddMember("parameters", parameters, query.GetAllocator());
+
+   if (this->send(query) == false || this->recv(answer) == false)
+     return false;
+
+   return true;
+}
+
+bool RemoteBackend::updateEmptyNonTerminals(uint32_t domain_id, const std::string& zonename, set<string>& insert, set<string>& erase, bool remove)
+{
+   rapidjson::Document query,answer;
+   rapidjson::Value parameters;
+   rapidjson::Value jinsert, jerase;
+
+   // no point doing dnssec if it's not supported
+   if (d_dnssec == false) return false;
+
+   query.SetObject();
+   JSON_ADD_MEMBER(query, "method", "updateEmptyNonTerminals", query.GetAllocator());
+
+   parameters.SetObject();
+   JSON_ADD_MEMBER(parameters, "domain_id", domain_id, query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "zonename", zonename.c_str(), query.GetAllocator());
+   JSON_ADD_MEMBER(parameters, "remove", remove, query.GetAllocator());
+   jinsert.SetArray();
+   string t;
+   BOOST_FOREACH(t, insert) {
+       jinsert.PushBack(t.c_str(), query.GetAllocator());
+   }
+   parameters.AddMember("insert", jinsert, query.GetAllocator());
+   jerase.SetArray();
+   BOOST_FOREACH(t, erase) {
+       jerase.PushBack(t.c_str(), query.GetAllocator());
+   }
+   parameters.AddMember("erase", jerase, query.GetAllocator());
+   query.AddMember("parameters", parameters, query.GetAllocator());
+
+   if (this->send(query) == false || this->recv(answer) == false)
+     return false;
+
+   return true;
+}
+
 // some rapidjson helpers 
 bool RemoteBackend::getBool(rapidjson::Value &value) {
    if (value.IsNull()) return false;
