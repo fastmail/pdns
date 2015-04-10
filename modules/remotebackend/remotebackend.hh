@@ -162,6 +162,12 @@ class RemoteBackend : public DNSBackend
   virtual bool setTSIGKey(const string& name, const string& algorithm, const string& content);
   virtual bool deleteTSIGKey(const string& name);
   virtual bool getTSIGKeys(std::vector< struct TSIGKey > &keys);
+  virtual bool updateDNSSECOrderAndAuth(uint32_t domain_id, const std::string& zonename, const std::string& qname, bool auth);
+  virtual bool updateDNSSECOrderAndAuthAbsolute(uint32_t domain_id, const std::string& qname, const std::string& ordername, bool auth);
+  virtual bool nullifyDNSSECOrderNameAndUpdateAuth(uint32_t domain_id, const std::string& qname, bool auth);
+  virtual bool nullifyDNSSECOrderNameAndAuth(uint32_t domain_id, const std::string& qname, const std::string& type);
+  virtual bool setDNSSECAuthOnDsRecord(uint32_t domain_id, const std::string& qname);
+  virtual bool updateEmptyNonTerminals(uint32_t domain_id, const std::string& zonename, set<string>& insert, set<string>& erase, bool remove);
 
   static DNSBackend *maker();
 
