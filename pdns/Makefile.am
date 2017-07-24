@@ -1282,3 +1282,10 @@ systemdsystemunit_DATA = \
 	pdns.service \
 	pdns@.service
 endif
+
+strip_verbose = $(strip_verbose_@AM_V@)
+strip_verbose_ = $(strip_verbose_@AM_DEFAULT_V@)
+strip_verbose_0 = @echo "  STRIP   " $^;
+strip_verbose_1 =
+all-local: $(bin_PROGRAMS) $(sbin_PROGRAMS) $(EXTRA_PROGRAMS)
+	$(strip_verbose)strip $(bin_PROGRAMS) $(sbin_PROGRAMS) $(EXTRA_PROGRAMS)
