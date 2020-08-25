@@ -464,8 +464,6 @@ struct ParsePacketTest
   void operator()() const
   {
     MOADNSParser mdp(false, (const char*)&*d_packet.begin(), d_packet.size());
-    typedef map<pair<DNSName, QType>, set<DNSResourceRecord>, TCacheComp > tcache_t;
-    tcache_t tcache;
     
     struct {
             vector<DNSResourceRecord> d_result;
