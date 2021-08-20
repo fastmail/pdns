@@ -2,6 +2,9 @@
 
 namespace YaHTTP {
 
+  template class AsyncLoader<Request>;
+  template class AsyncLoader<Response>;
+
   bool isspace(char c) {
     return std::isspace(c) != 0;
   }
