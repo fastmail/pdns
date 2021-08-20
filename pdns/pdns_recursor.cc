@@ -1651,7 +1651,7 @@ void handleNewUDPQuestion(int fd, FDMultiplexer::funcparam_t& var)
           }
         }
         if(g_weDistributeQueries)
-          distributeAsyncFunction(question, boost::bind(doProcessUDPQuestion, question, fromaddr, dest, tv, fd));
+          distributeAsyncFunction(question, std::bind(doProcessUDPQuestion, question, fromaddr, dest, tv, fd));
         else
           doProcessUDPQuestion(question, fromaddr, dest, tv, fd);
       }
@@ -2143,7 +2143,7 @@ template<class T> T broadcastAccFunction(const boost::function<T*()>& func, bool
     }
 
     ThreadMSG* tmsg = new ThreadMSG();
-    tmsg->func = boost::bind(voider<T>, func);
+    tmsg->func = std::bind(voider<T>, func);
     tmsg->wantAnswer = true;
 
     if(write(tps.writeToThread, &tmsg, sizeof(tmsg)) != sizeof(tmsg)) {
@@ -2429,7 +2429,7 @@ catch(PDNSException& ae)
 
 string doTraceRegex(vector<string>::const_iterator begin, vector<string>::const_iterator end)
 {
-  return broadcastAccFunction<string>(boost::bind(pleaseUseNewTraceRegex, begin!=end ? *begin : ""));
+  return broadcastAccFunction<string>(std::bind(pleaseUseNewTraceRegex, begin!=end ? *begin : ""));
 }
 
 static void checkLinuxIPv6Limits()
@@ -2548,7 +2548,7 @@ void parseACLs()
   }
 
   g_initialAllowFrom = allowFrom;
-  broadcastFunction(boost::bind(pleaseSupplantACLs, allowFrom));
+  broadcastFunction(std::bind(pleaseSupplantACLs, allowFrom));
   delete oldAllowFrom;
 
   l_initialized = true;

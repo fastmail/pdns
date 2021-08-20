@@ -368,9 +368,9 @@ static void apiServerCacheFlush(HttpRequest* req, HttpResponse* resp) {
 
   DNSName canon = apiNameToDNSName(req->getvars["domain"]);
 
-  int count = broadcastAccFunction<uint64_t>(boost::bind(pleaseWipeCache, canon, false));
-  count += broadcastAccFunction<uint64_t>(boost::bind(pleaseWipePacketCache, canon, false));
-  count += broadcastAccFunction<uint64_t>(boost::bind(pleaseWipeAndCountNegCache, canon, false));
+  int count = broadcastAccFunction<uint64_t>(std::bind(pleaseWipeCache, canon, false));
+  count += broadcastAccFunction<uint64_t>(std::bind(pleaseWipePacketCache, canon, false));
+  count += broadcastAccFunction<uint64_t>(std::bind(pleaseWipeAndCountNegCache, canon, false));
   resp->setBody(Json::object {
     { "count", count },
     { "result", "Flushed cache." }
@@ -416,7 +416,7 @@ RecursorWebServer::RecursorWebServer(FDMultiplexer* fdm)
   d_ws->bind();
 
   // legacy dispatch
-  d_ws->registerApiHandler("/jsonstat", boost::bind(&RecursorWebServer::jsonstat, this, _1, _2));
+  d_ws->registerApiHandler("/jsonstat", std::bind(&RecursorWebServer::jsonstat, this, std::placeholders::_1, std::placeholders::_2));
   d_ws->registerApiHandler("/api/v1/servers/localhost/cache/flush", &apiServerCacheFlush);
   d_ws->registerApiHandler("/api/v1/servers/localhost/config/allow-from", &apiServerConfigAllowFrom);
   d_ws->registerApiHandler("/api/v1/servers/localhost/config", &apiServerConfig);
@@ -552,7 +552,7 @@ void AsyncServerNewConnectionMT(void *p) {
 void AsyncServer::asyncWaitForConnections(FDMultiplexer* fdm, const newconnectioncb_t& callback)
 {
   d_asyncNewConnectionCallback = callback;
-  fdm->addReadFD(d_server_socket.getHandle(), boost::bind(&AsyncServer::newConnection, this));
+  fdm->addReadFD(d_server_socket.getHandle(), std::bind(&AsyncServer::newConnection, this));
 }
 
 void AsyncServer::newConnection()
@@ -600,5 +600,5 @@ void AsyncWebServer::serveConnection(Socket *client)
 void AsyncWebServer::go() {
   if (!d_server)
     return;
-  ((AsyncServer*)d_server)->asyncWaitForConnections(d_fdm, boost::bind(&AsyncWebServer::serveConnection, this, _1));
+  ((AsyncServer*)d_server)->asyncWaitForConnections(d_fdm, std::bind(&AsyncWebServer::serveConnection, this, std::placeholders::_1));
 }

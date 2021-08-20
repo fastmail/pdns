@@ -216,7 +216,7 @@ string doDumpNSSpeeds(T begin, T end)
     return "Error opening dump file for writing: "+string(strerror(errno))+"\n";
   uint64_t total = 0;
   try {
-    total = broadcastAccFunction<uint64_t>(boost::bind(pleaseDumpNSSpeeds, fd));
+    total = broadcastAccFunction<uint64_t>(std::bind(pleaseDumpNSSpeeds, fd));
   }
   catch(...){}
 
@@ -238,7 +238,7 @@ string doDumpCache(T begin, T end)
     return "Error opening dump file for writing: "+string(strerror(errno))+"\n";
   uint64_t total = 0;
   try {
-    total = broadcastAccFunction<uint64_t>(boost::bind(pleaseDump, fd));
+    total = broadcastAccFunction<uint64_t>(std::bind(pleaseDump, fd));
   }
   catch(...){}
   
@@ -318,9 +318,9 @@ string doWipeCache(T begin, T end)
 
   int count=0, pcount=0, countNeg=0;
   for (auto wipe : toWipe) {
-    count+= broadcastAccFunction<uint64_t>(boost::bind(pleaseWipeCache, wipe.first, wipe.second));
-    pcount+= broadcastAccFunction<uint64_t>(boost::bind(pleaseWipePacketCache, wipe.first, wipe.second));
-    countNeg+=broadcastAccFunction<uint64_t>(boost::bind(pleaseWipeAndCountNegCache, wipe.first, wipe.second));
+    count+= broadcastAccFunction<uint64_t>(std::bind(pleaseWipeCache, wipe.first, wipe.second));
+    pcount+= broadcastAccFunction<uint64_t>(std::bind(pleaseWipePacketCache, wipe.first, wipe.second));
+    countNeg+=broadcastAccFunction<uint64_t>(std::bind(pleaseWipeAndCountNegCache, wipe.first, wipe.second));
   }
 
   return "wiped "+std::to_string(count)+" records, "+std::to_string(countNeg)+" negative records, "+std::to_string(pcount)+" packets\n";
@@ -401,7 +401,7 @@ string doAddNTA(T begin, T end)
   g_luaconfs.modify([who, why](LuaConfigItems& lci) {
       lci.negAnchors[who] = why;
       });
-  broadcastAccFunction<uint64_t>(boost::bind(pleaseWipePacketCache, who, true));
+  broadcastAccFunction<uint64_t>(std::bind(pleaseWipePacketCache, who, true));
   return "Added Negative Trust Anchor for " + who.toLogString() + " with reason '" + why + "'\n";
 }
 
@@ -444,7 +444,7 @@ string doClearNTA(T begin, T end)
     g_luaconfs.modify([who](LuaConfigItems& lci) {
         lci.negAnchors.erase(who);
       });
-    broadcastAccFunction<uint64_t>(boost::bind(pleaseWipePacketCache, who, true));
+    broadcastAccFunction<uint64_t>(std::bind(pleaseWipePacketCache, who, true));
     if (!first) {
       first = false;
       removed += ",";
@@ -493,7 +493,7 @@ string doAddTA(T begin, T end)
       auto ds = unique_ptr<DSRecordContent>(dynamic_cast<DSRecordContent*>(DSRecordContent::make(what)));
       lci.dsAnchors[who].insert(*ds);
       });
-    broadcastAccFunction<uint64_t>(boost::bind(pleaseWipePacketCache, who, true));
+    broadcastAccFunction<uint64_t>(std::bind(pleaseWipePacketCache, who, true));
     L<<Logger::Warning<<endl;
     return "Added Trust Anchor for " + who.toStringRootDot() + " with data " + what + "\n";
   }
@@ -534,7 +534,7 @@ string doClearTA(T begin, T end)
     g_luaconfs.modify([who](LuaConfigItems& lci) {
         lci.dsAnchors.erase(who);
       });
-    broadcastAccFunction<uint64_t>(boost::bind(pleaseWipePacketCache, who, true));
+    broadcastAccFunction<uint64_t>(std::bind(pleaseWipePacketCache, who, true));
     if (!first) {
       first = false;
       removed += ",";
@@ -834,13 +834,13 @@ RecursorControlParser::RecursorControlParser()
   addGetStat("ignored-packets", &g_stats.ignoredCount);
   addGetStat("max-mthread-stack", &g_stats.maxMThreadStackUsage);
   
-  addGetStat("negcache-entries", boost::bind(getNegCacheSize));
-  addGetStat("throttle-entries", boost::bind(getThrottleSize)); 
+  addGetStat("negcache-entries", std::bind(getNegCacheSize));
+  addGetStat("throttle-entries", std::bind(getThrottleSize)); 
 
-  addGetStat("nsspeeds-entries", boost::bind(getNsSpeedsSize));
-  addGetStat("failed-host-entries", boost::bind(getFailedHostsSize));
+  addGetStat("nsspeeds-entries", std::bind(getNsSpeedsSize));
+  addGetStat("failed-host-entries", std::bind(getFailedHostsSize));
 
-  addGetStat("concurrent-queries", boost::bind(getConcurrentQueries)); 
+  addGetStat("concurrent-queries", std::bind(getConcurrentQueries)); 
   addGetStat("security-status", &g_security_status);
   addGetStat("outgoing-timeouts", &SyncRes::s_outgoingtimeouts);
   addGetStat("outgoing4-timeouts", &SyncRes::s_outgoing4timeouts);
@@ -853,13 +853,13 @@ RecursorControlParser::RecursorControlParser()
   addGetStat("throttled-out", &SyncRes::s_throttledqueries);
   addGetStat("unreachables", &SyncRes::s_unreachables);
   addGetStat("chain-resends", &g_stats.chainResends);
-  addGetStat("tcp-clients", boost::bind(TCPConnection::getCurrentConnections));
+  addGetStat("tcp-clients", std::bind(TCPConnection::getCurrentConnections));
 
 #ifdef __linux__
-  addGetStat("udp-recvbuf-errors", boost::bind(udpErrorStats, "udp-recvbuf-errors"));
-  addGetStat("udp-sndbuf-errors", boost::bind(udpErrorStats, "udp-sndbuf-errors"));
-  addGetStat("udp-noport-errors", boost::bind(udpErrorStats, "udp-noport-errors"));
-  addGetStat("udp-in-errors", boost::bind(udpErrorStats, "udp-in-errors"));
+  addGetStat("udp-recvbuf-errors", std::bind(udpErrorStats, "udp-recvbuf-errors"));
+  addGetStat("udp-sndbuf-errors", std::bind(udpErrorStats, "udp-sndbuf-errors"));
+  addGetStat("udp-noport-errors", std::bind(udpErrorStats, "udp-noport-errors"));
+  addGetStat("udp-in-errors", std::bind(udpErrorStats, "udp-in-errors"));
 #endif
 
   addGetStat("edns-ping-matches", &g_stats.ednsPingMatches);
@@ -870,17 +870,17 @@ RecursorControlParser::RecursorControlParser()
   addGetStat("noedns-outqueries", &g_stats.noEdnsOutQueries);
 
   addGetStat("uptime", calculateUptime);
-  addGetStat("real-memory-usage", boost::bind(getRealMemoryUsage, string()));
-  addGetStat("fd-usage", boost::bind(getOpenFileDescriptors, string()));  
+  addGetStat("real-memory-usage", std::bind(getRealMemoryUsage, string()));
+  addGetStat("fd-usage", std::bind(getOpenFileDescriptors, string()));  
 
   //  addGetStat("query-rate", getQueryRate);
   addGetStat("user-msec", getUserTimeMsec);
   addGetStat("sys-msec", getSysTimeMsec);
 
 #ifdef MALLOC_TRACE
-  addGetStat("memory-allocs", boost::bind(&MallocTracer::getAllocs, g_mtracer, string()));
-  addGetStat("memory-alloc-flux", boost::bind(&MallocTracer::getAllocFlux, g_mtracer, string()));
-  addGetStat("memory-allocated", boost::bind(&MallocTracer::getTotAllocated, g_mtracer, string()));
+  addGetStat("memory-allocs", std::bind(&MallocTracer::getAllocs, g_mtracer, string()));
+  addGetStat("memory-alloc-flux", std::bind(&MallocTracer::getAllocFlux, g_mtracer, string()));
+  addGetStat("memory-allocated", std::bind(&MallocTracer::getTotAllocated, g_mtracer, string()));
 #endif
 
   addGetStat("dnssec-validations", &g_stats.dnssecValidations);
